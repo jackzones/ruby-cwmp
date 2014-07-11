@@ -3,5 +3,5 @@
 require 'cwmp'
 
 cpe = Cwmp::Cpe.new('1', '0013C8', 'MySoftv1', 'Moonar', 'http://localhost:9292/acs')
-cpe.start
+cpe.poweron
 
