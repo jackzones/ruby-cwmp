@@ -1,7 +1,7 @@
-#!env ruby
+#!/usr/bin/env ruby
 
 require 'optparse'
-require './lib/mosesacs'
+require 'cwmp'
 
 options = {}
 o = OptionParser.new
@@ -14,16 +14,19 @@ o.on('-v', '--version', 'Version') { puts "Moses v#{Moses::VERSION}"; exit }
 o.parse!
 
 
-if options['daemon']
-    port = options['port'] || 9292
-    puts "Starting Moses ACS Daemon on port #{port}"
-    Moses::Acs.new(port).start
-elsif options['reconnect']
-    url = options['host'] || "http://localhost:9292/api"
-    puts "Connecting to remote daemon on #{url}"
-    Moses::CLI.new.start
-else
-    puts o; exit
-end
+# if options['daemon']
+#     port = options['port'] || 9292
+#     puts "Starting Moses ACS Daemon on port #{port}"
+#     Moses::Acs.new(port).start
+# elsif options['reconnect']
+#     url = options['host'] || "http://localhost:9292/api"
+#     puts "Connecting to remote daemon on #{url}"
+#     Moses::CLI.new.start
+# else
+#     puts o; exit
+# end
 
+port = ARGV[0] || 9321
+puts "Starting ACS Daemon on http://localhost:#{port}"
+Cwmp::Acs.new(port).start
 
