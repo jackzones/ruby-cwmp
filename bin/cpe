@@ -2,6 +2,6 @@
 
 require 'cwmp'
 
-cpe = Cwmp::Cpe.new('1', '0013C8', 'MySoftv1', 'Moonar', 'http://localhost:9292/acs')
+cpe = Cwmp::Cpe.new('http://localhost:9292/acs', {:serial => '1', :oui => '0013C8', :software_version => 'MySoftv1', :manufacturer => 'Moonar'})
 cpe.poweron
 
