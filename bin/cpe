@@ -5,3 +5,5 @@ require 'cwmp'
 cpe = Cwmp::Cpe.new 'http://localhost:9292/acs', {:serial => "A54FD"}
 cpe.poweron
 
+cpe.loop
+

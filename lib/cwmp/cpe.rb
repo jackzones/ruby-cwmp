@@ -1,4 +1,5 @@
 require 'httpclient'
+require 'socket'
 
 module Cwmp
 
@@ -9,17 +10,23 @@ module Cwmp
         def initialize (acs_url, h = {})
             @acs_url = acs_url
             @serial = h[:serial] || "23434ds"
-            @oui = h[:oui] || "0013C8"
+            @oui = h[:oui] || "006754"
             @software_version = h[:software_version] || "0.1.1"
             @manufacturer = h[:manufacturer] || "Moonar"
             @state = 'off'
-            @t = Thread.new { periodic 10 }
-            @t = Thread.new { connection_request }
+            @periodic = Thread.new { periodic 30 }
+            @conn_req = Thread.new { connection_request }
+            @factory = true
         end
 
         def poweron
             @state = 'on'
-            do_connection '0 BOOTSTRAP'
+            if @factory
+                do_connection '0 BOOTSTRAP'
+            else
+                do_connection '1 BOOT'
+            end
+            @factory = false
         end
 
         def poweroff
@@ -34,7 +41,13 @@ module Cwmp
         end
 
         def reset
-            do_connection '0 BOOTSTRAP'
+            poweroff
+            @factory = true
+            poweron
+        end
+
+        def loop
+            @periodic.join
         end
 
         private
@@ -47,12 +60,29 @@ module Cwmp
         end
 
         def connection_request
+            server = TCPServer.open(9600)
+            while true
+                client = server.accept
 
+                response = "<html>...</html>"
+                headers = ["HTTP/1.0 200 OK",
+                           "Content-Type: text/html",
+                           "Content-Length: #{response.length}"].join("\r\n")
+
+                client.puts headers
+                client.puts "\r\n\r\n"
+                client.puts response
+
+                client.close
+
+                do_connection '6 CONNECTION REQUEST'
+            end
         end
 
         def do_connection(event)
             c = HTTPClient.new
 
+            puts "sending Inform with event #{event}"
             resp = c.post @acs_url, Cwmp::Message::inform(@manufacturer, @oui, @serial, event, @software_version)
             doc = Nokogiri::XML(resp.body)
             message_type = doc.css("soap|Body").children.map(&:name)[1]

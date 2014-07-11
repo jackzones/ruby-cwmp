@@ -33,7 +33,7 @@ module Cwmp
             <ParameterList soap-enc:arrayType="cwmp:ParameterValueStruct[7]">
                 <ParameterValueStruct xsi:type="cwmp:ParameterValueStruct">
                     <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
-                    <Value xsi:type="xsd:string">NGRG 2009</Value>
+                    <Value xsi:type="xsd:string">MNR001</Value>
                 </ParameterValueStruct>
                 <ParameterValueStruct xsi:type="cwmp:ParameterValueStruct">
                     <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
@@ -49,7 +49,7 @@ module Cwmp
                 </ParameterValueStruct>
                 <ParameterValueStruct xsi:type="cwmp:ParameterValueStruct">
                     <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
-                    <Value xsi:type="xsd:string">http://10.19.0.'+serial+':9600/'+serial+'</Value>
+                    <Value xsi:type="xsd:string">http://127.0.0.1:9600/'+serial+'</Value>
                 </ParameterValueStruct>
                 <ParameterValueStruct xsi:type="cwmp:ParameterValueStruct">
                     <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
