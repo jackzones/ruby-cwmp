@@ -1,7 +1,4 @@
-#!/env ruby
-
 require 'nokogiri'
-
 
 module Cwmp
     class Message

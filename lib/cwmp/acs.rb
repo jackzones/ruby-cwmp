@@ -1,38 +1,11 @@
-#!/env ruby
-
 require 'rubygems'
 require 'rack'
 require 'thin'
 require 'http_router'
-require 'rack/websocket'
 require 'nokogiri'
 
 
 module Cwmp
-
-    VERSION = "0.1.2"
-
-    class SocketApp < Rack::WebSocket::Application
-        def on_open(env)
-            puts 'Client connected'
-        end
-
-        def on_close(env)
-            puts 'Client disconnected'
-        end
-
-        def on_message(env, message)
-            case message
-                when "list"
-                    puts "list"
-                    send_data 'ok man'
-                else
-                    puts "Got message: #{message}"
-                    send_data 'Here is your reply'
-            end
-        end
-    end
-
 
     class WebApp
 
@@ -57,7 +30,7 @@ module Cwmp
 
                 puts "got Inform from #{req.ip}:#{req.port} [sn #{serial_number}] with eventcodes #{event_codes.join(", ")}"
 
-                inform_response = Moses::Message::inform_response
+                inform_response = Cwmp::Message::inform_response
                 response = Rack::Response.new inform_response, 200, {'Connection' => 'Keep-Alive', 'Server' => 'Moses'}
                 response.set_cookie("sessiontrack", {:value => "294823094lskdfsfsdf", :path => "/", :expires => Time.now+24*60*60})
                 response.finish
@@ -82,7 +55,7 @@ module Cwmp
         def initialize (port)
             @port = port
             @app = HttpRouter.new do
-                add('/api').to(SocketApp.new)
+                # add('/api').to(SocketApp.new)
                 add('/acs').to(WebApp.new)
             end
         end
