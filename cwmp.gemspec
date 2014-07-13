@@ -12,10 +12,10 @@ Gem::Specification.new do |s|
     s.homepage    = 'https://github.com/lucacervasio/ruby-cwmp'
     s.license     = 'MIT'
 
-    s.add_dependency('nokogiri')
-    s.add_dependency('rack')
-    s.add_dependency('thin')
-    s.add_dependency('http_router')
-    s.add_dependency('eventmachine')
-    s.add_dependency('faye-websocket')
+    s.add_dependency('nokogiri', '~> 1.6', '>= 1.6.0')
+    s.add_dependency('rack', '~> 1.5', '>= 1.5.2')
+    s.add_dependency('thin', '~> 1.6', '>= 1.6.2')
+    s.add_dependency('http_router', '~> 0.11', '>= 0.11.1')
+    s.add_dependency('eventmachine', '~> 1.0', '>= 1.0.3')
+    s.add_dependency('faye-websocket', '~> 0.6', '>= 0.6.2')
 end
