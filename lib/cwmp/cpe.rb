@@ -85,13 +85,13 @@ module Cwmp
             puts "sending Inform with event #{event}"
             resp = c.post @acs_url, Cwmp::Message::inform(@manufacturer, @oui, @serial, event, @software_version)
             doc = Nokogiri::XML(resp.body)
-            message_type = doc.css("soap|Body").children.map(&:name)[1]
+            message_type = doc.css("Body").children.map(&:name)[1]
             puts "got #{message_type} message"
 
             resp = c.post @acs_url, ""
             while resp.status != 204
                 doc = Nokogiri::XML(resp.body)
-                message_type = doc.css("soap|Body").children.map(&:name)[1]
+                message_type = doc.css("Body").children.map(&:name)[1]
                 case message_type
                     when "GetParameterValues"
                         puts "got #{message_type}"
@@ -105,6 +105,7 @@ module Cwmp
                 end
             end
             puts "got #{resp.status}, closing"
+            c.reset @acs_url
         end
 
     end
