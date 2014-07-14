@@ -1,8 +1,18 @@
 #!/usr/bin/env ruby
 
+require 'optparse'
 require 'cwmp'
 
-cpe = Cwmp::Cpe.new 'http://localhost:9292/acs', {:serial => "A54FD"}
+options = {}
+o = OptionParser.new
+o.on('-u', '--url url', 'ACS url to connect') { |url| options['url'] = url}
+o.on('-h', '--help', 'Server port') { puts o; exit }
+o.on('-v', '--version', 'Version') { puts "acs v#{Cwmp::VERSION}"; exit }
+o.parse!
+
+url = options['url'] || 'http://localhost:9292/acs'
+
+cpe = Cwmp::Cpe.new url, {:serial => "A54FD"}
 cpe.poweron
 
 cpe.loop
