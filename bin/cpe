@@ -13,7 +13,12 @@ o.parse!
 url = options['url'] || 'http://localhost:9292/acs'
 
 cpe = Cwmp::Cpe.new url, {:serial => "A54FD"}
-cpe.poweron
+begin
+    cpe.poweron
+rescue
+    puts "Can't connect to #{url}"
+    exit(1)
+end
 
 cpe.loop
 

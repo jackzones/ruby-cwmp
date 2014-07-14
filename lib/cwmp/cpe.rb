@@ -82,8 +82,8 @@ module Cwmp
         def do_connection(event)
             c = HTTPClient.new
 
-            puts "sending Inform with event #{event}"
             resp = c.post @acs_url, Cwmp::Message::inform(@manufacturer, @oui, @serial, event, @software_version)
+            puts "sending Inform with event #{event}"
             doc = Nokogiri::XML(resp.body)
             message_type = doc.css("Body").children.map(&:name)[1]
             puts "got #{message_type} message"
