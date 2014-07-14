@@ -9,6 +9,7 @@ Gem::Specification.new do |s|
     s.authors     = ["Luca Cervasio"]
     s.email       = 'luca.cervasio@gmail.com'
     s.files       = `git ls-files`.split($/)
+    s.executables = s.files.grep(%r{^bin/}) { |f| File.basename(f) }
     s.homepage    = 'https://github.com/lucacervasio/ruby-cwmp'
     s.license     = 'MIT'
 
