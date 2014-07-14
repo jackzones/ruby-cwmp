@@ -101,7 +101,7 @@ module Cwmp
         end
 
         def self.get_parameter_values_response
-            return '<soap:Envelopeesacs.org:9292>
+            return '<soap:Envelope
 	xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
 	xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
 	xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
@@ -176,7 +176,7 @@ module Cwmp
         end
 
         def self.get_parameter_names_response
-            return '<soap:Envelopeesacs.org:9292>
+            return '<soap:Envelope
 	xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
 	xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
 	xmlns:cwmp="urn:dslforum-org:cwmp-1-0"

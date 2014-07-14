@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
     spec.version      = Cwmp::VERSION
     spec.date         = '2014-07-14'
     spec.summary      = "A CWMP library"
-    spec.description  = "A ruby library to parse and generate CWMP messages. Includes a CPE simulator and a simple ACS server."
+    spec.description  = "A ruby library to parse and generate CWMP messages. Includes an ACS server and a CPE simulator."
     spec.authors      = ["Luca Cervasio"]
     spec.email        = 'luca.cervasio@gmail.com'
     spec.files        = `git ls-files`.split($/)

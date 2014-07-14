@@ -84,25 +84,22 @@ module Cwmp
                 c = HTTPClient.new
 
                 puts "sending Inform with event #{event}"
-                resp = c.post @acs_url, Cwmp::Message::inform(@manufacturer, @oui, @serial, event, @software_version), {'Server' => "ruby-cwmp #{Cwmp::VERSION}"}
+                resp = c.post @acs_url, Cwmp::Message::inform(@manufacturer, @oui, @serial, event, @software_version), {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                 doc = Nokogiri::XML(resp.body)
-                message_type = doc.css("Body").children.map(&:name)[1]
+                message_type = doc.css("soapenv|Body").children.map(&:name)[1]
                 puts "got #{message_type} message"
-
-                resp = c.post @acs_url, "", {'Server' => "ruby-cwmp #{Cwmp::VERSION}"}
+                resp = c.post @acs_url, "", {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                 while resp.status != 204
                     doc = Nokogiri::XML(resp.body)
-                    message_type = doc.css("Body").children.map(&:name)[1]
+                    message_type = doc.css("soapenv|Body").children.map(&:name)[1]
+                    puts "got #{message_type}"
                     case message_type
                         when "GetParameterValues"
-                            puts "got #{message_type}"
-                            resp = c.post @acs_url, Cwmp::Message::get_parameter_values_response
+                            resp = c.post @acs_url, Cwmp::Message::get_parameter_values_response, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                         when "GetParameterNames"
-                            puts "got #{message_type}"
-                            resp = c.post @acs_url, Cwmp::Message::get_parameter_names_response
+                            resp = c.post @acs_url, Cwmp::Message::get_parameter_names_response, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                         when "SetParameterValues"
-                            puts "got #{message_type}"
-                            resp = c.post @acs_url, Cwmp::Message::set_parameter_values_response
+                            resp = c.post @acs_url, Cwmp::Message::set_parameter_values_response, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                     end
                 end
                 puts "got #{resp.status}, closing"
