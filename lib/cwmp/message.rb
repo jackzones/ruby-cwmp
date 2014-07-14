@@ -263,8 +263,3 @@ module Cwmp
         end
     end
 end
-
-
-# puts Cwmp::Message::inform_response
-# puts Cwmp::Message::get_parameter_values ["Device.", "as"]
-# puts Cwmp::Message::set_parameter_values [["Device.Time", "now"], ["Device.Harder", "asdasdasd"]]

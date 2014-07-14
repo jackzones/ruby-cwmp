@@ -107,8 +107,6 @@ module Cwmp
             puts "got #{resp.status}, closing"
         end
 
-
     end
-
 
 end
