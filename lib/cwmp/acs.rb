@@ -3,11 +3,12 @@ require 'rack'
 require 'thin'
 require 'http_router'
 require 'nokogiri'
+require 'readline'
 
 
 module Cwmp
 
-    class WebApp
+    class Handler
 
         def call(env)
             req = Rack::Request.new(env)
@@ -56,15 +57,58 @@ module Cwmp
             @port = port
             @app = HttpRouter.new do
                 # add('/api').to(SocketApp.new)
-                add('/acs').to(WebApp.new)
+                add('/acs').to(Handler.new)
+            end
+        end
+
+        def start_cli
+
+            list = [
+                'GetParameterValues', 'SetParameterValues', 'Reboot', 'FactoryReset', 'Download', 'AddObject', 'DeleteObject',
+                'help', 'quit', "waitMessage"
+            ].sort
+
+            comp = proc { |s| list.grep(/^#{Regexp.escape(s)}/) }
+
+            ::Readline.completion_append_character = " "
+            ::Readline.completion_proc = comp
+
+            while line = ::Readline.readline('> ', true)
+                case line
+                    when "quit"
+                        puts "Bye"
+                        exit(0)
+                    when "help"
+                        help
+                    when "list"
+                        puts "list"
+                end
             end
         end
 
         def start
-            Thin::Logging.silent = true
-            Rack::Handler::Thin.run @app, :Port => @port
+            @web = Thread.new do
+                Thin::Logging.silent = true
+                Rack::Handler::Thin.run @app, :Port => @port
+            end
+
+            Thread.new do
+                while true do
+                    sleep 1
+                    Readline.clear_rl
+                    puts "i"
+                    Readline.restore
+                end
+            end
+            start_cli
         end
     end
 
 
+
+
 end
+
+
+
+
