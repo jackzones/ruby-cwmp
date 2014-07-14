@@ -265,6 +265,6 @@ module Cwmp
 end
 
 
-# puts Moses::Message::inform_response
-# puts Moses::Message::get_parameter_values ["Device.", "as"]
-# puts Moses::Message::set_parameter_values [["Device.Time", "now"], ["Device.Harder", "asdasdasd"]]
+# puts Cwmp::Message::inform_response
+# puts Cwmp::Message::get_parameter_values ["Device.", "as"]
+# puts Cwmp::Message::set_parameter_values [["Device.Time", "now"], ["Device.Harder", "asdasdasd"]]

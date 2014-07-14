@@ -5,23 +5,22 @@ require 'cwmp'
 
 options = {}
 o = OptionParser.new
-o.on('-d', '--daemon', "Start Moses daemon server") { |b| options['daemon'] = b }
+o.on('-d', '--daemon', "Start acs daemon") { |b| options['daemon'] = b }
 o.on('-p', '--port NUM', Integer, 'Server port') { |port| options['port'] = port }
 o.on('-r', '--reconnect', "Connects to remote daemon via CLI") { |b| options['reconnect'] = b }
 o.on('-H', '--host HOST', 'Specify host for remote CLI connection') { |host| options['host'] = host }
 o.on('-h', '--help', 'Server port') { puts o; exit }
-o.on('-v', '--version', 'Version') { puts "Moses v#{Moses::VERSION}"; exit }
+o.on('-v', '--version', 'Version') { puts "acs v#{Cwmp::VERSION}"; exit }
 o.parse!
 
 
 # if options['daemon']
 #     port = options['port'] || 9292
-#     puts "Starting Moses ACS Daemon on port #{port}"
-#     Moses::Acs.new(port).start
+#     puts "Starting ACS Daemon on port #{port}"
+#     Cwmp::Acs.new(port).start
 # elsif options['reconnect']
 #     url = options['host'] || "http://localhost:9292/api"
 #     puts "Connecting to remote daemon on #{url}"
-#     Moses::CLI.new.start
 # else
 #     puts o; exit
 # end

@@ -31,7 +31,7 @@ module Cwmp
                 puts "got Inform from #{req.ip}:#{req.port} [sn #{serial_number}] with eventcodes #{event_codes.join(", ")}"
 
                 inform_response = Cwmp::Message::inform_response
-                response = Rack::Response.new inform_response, 200, {'Connection' => 'Keep-Alive', 'Server' => 'Moses'}
+                response = Rack::Response.new inform_response, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
                 response.set_cookie("sessiontrack", {:value => "294823094lskdfsfsdf", :path => "/", :expires => Time.now+24*60*60})
                 response.finish
             elsif message_type == "TransferComplete"
@@ -44,7 +44,7 @@ module Cwmp
                 end
 
                 # Got Empty Post or a Response. Now check for any event to send, otherwise 204
-                [204, {"Connection" => "Close", 'Server' => 'Moses'}, ""]
+                [204, {"Connection" => "Close", 'Server' => 'ruby-cwmp'}, ""]
             end
         end
 
