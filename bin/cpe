@@ -6,19 +6,16 @@ require 'cwmp'
 options = {}
 o = OptionParser.new
 o.on('-u', '--url url', 'ACS url to connect') { |url| options['url'] = url}
+o.on('-p', '--periodic 60', Integer, 'Interval for periodic Inform (0=disable)') { |periodic| options['periodic'] = periodic}
 o.on('-h', '--help', 'Server port') { puts o; exit }
-o.on('-v', '--version', 'Version') { puts "acs v#{Cwmp::VERSION}"; exit }
+o.on('-v', '--version', 'Version') { puts "cpe v#{Cwmp::VERSION}"; exit }
 o.parse!
 
 url = options['url'] || 'http://localhost:9292/acs'
+periodic_interval = options['periodic'] || 0
 
-cpe = Cwmp::Cpe.new url, {:serial => "A54FD"}
-begin
-    cpe.poweron
-    cpe.loop
-rescue
-    puts "Can't connect to #{url}"
-    exit(1)
-end
+cpe = Cwmp::Cpe.new url, periodic_interval, {:serial => "A54FD"}
+cpe.poweron
+cpe.loop
 
 
