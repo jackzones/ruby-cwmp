@@ -3,7 +3,7 @@ require './lib/cwmp/version'
 Gem::Specification.new do |spec|
     spec.name         = 'cwmp'
     spec.version      = Cwmp::VERSION
-    spec.date         = '2014-07-14'
+    spec.date         = Date.today.to_s
     spec.summary      = "A CWMP library"
     spec.description  = "A ruby library to parse and generate CWMP messages. Includes an ACS server and a CPE simulator."
     spec.authors      = ["Luca Cervasio"]
