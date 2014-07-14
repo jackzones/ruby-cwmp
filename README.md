@@ -23,7 +23,7 @@ $ acs
 
 and acs will be up, using thin
 
-## Running CPE simulatore
+## Running CPE simulator
 
 type `cpe` on your shell
 
