@@ -86,12 +86,14 @@ module Cwmp
                 puts "sending Inform with event #{event}"
                 resp = c.post @acs_url, Cwmp::Message::inform(@manufacturer, @oui, @serial, event, @software_version), {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                 doc = Nokogiri::XML(resp.body)
-                message_type = doc.css("soapenv|Body").children.map(&:name)[1]
+                resp.body =~ /(\w+):Envelope/
+                soap_ns = $1
+                message_type = doc.css("#{soap_ns}|Body").children.map(&:name)[1]
                 puts "got #{message_type} message"
                 resp = c.post @acs_url, "", {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                 while resp.status != 204
                     doc = Nokogiri::XML(resp.body)
-                    message_type = doc.css("soapenv|Body").children.map(&:name)[1]
+                    message_type = doc.css("#{soap_ns}|Body").children.map(&:name)[1]
                     puts "got #{message_type}"
                     case message_type
                         when "GetParameterValues"
