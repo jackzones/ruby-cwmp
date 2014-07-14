@@ -18,4 +18,5 @@ Gem::Specification.new do |s|
     s.add_dependency('http_router', '~> 0.11', '>= 0.11.1')
     s.add_dependency('eventmachine', '~> 1.0', '>= 1.0.3')
     s.add_dependency('faye-websocket', '~> 0.6', '>= 0.6.2')
+    s.add_dependency('httpclient', '~> 2.4', '>= 2.4.0')
 end
