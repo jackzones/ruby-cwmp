@@ -10,7 +10,7 @@ Thread::abort_on_exception = true
 module Cwmp
 
     class AcsCpe
-        attr_accessor :serial, :conn_req, :queue
+        attr_accessor :serial, :conn_req, :queue, :session_cookie
 
         def initialize serial
             @serial = serial
@@ -32,12 +32,13 @@ module Cwmp
         def call(env)
             req = Rack::Request.new(env)
             len = req.content_length.to_i
+            cookie = req.cookies['sessiontrack']
 
             if len == 0
                 message_type = ''
             else
                 doc = Nokogiri::XML(req.body.read)
-                message_type = doc.css("soap|Body").children.map(&:name)[1]
+                message_type = doc.css("soap|Body")[0].element_children[0].name
             end
 
             if message_type == "Inform"
@@ -48,9 +49,12 @@ module Cwmp
                 parameters = {}
                 doc.css("ParameterValueStruct").map { |it| parameters[it.children[1].text] = it.children[3].text }
 
+                ck = "sdfd"
+
                 if !@acs.cpes.has_key? serial_number
                     cpe = AcsCpe.new serial_number
                     cpe.conn_req = parameters['InternetGatewayDevice.ManagementServer.ConnectionRequestURL']
+                    cpe.session_cookie = ck
                     @acs.cpes[serial_number] = cpe
                 end
                 puts "got Inform from #{req.ip}:#{req.port} [sn #{serial_number}] with eventcodes #{event_codes.join(", ")}"
@@ -69,13 +73,13 @@ module Cwmp
                 end
 
                 # Got Empty Post or a Response. Now check for any event to send, otherwise 204
-                if @acs.cpes['A54FD'].queue.size > 0
-                    m = @acs.cpes['A54FD'].queue.pop
-                    response = Rack::Response.new m, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
-                    response.finish
-                else
+                # if @acs.cpes['A54FD'].queue.size > 0
+                #     m = @acs.cpes['A54FD'].queue.pop
+                #     response = Rack::Response.new m, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
+                #     response.finish
+                # else
                     [204, {"Connection" => "Close", 'Server' => 'ruby-cwmp'}, ""]
-                end
+                # end
 
             end
         end
@@ -130,7 +134,7 @@ module Cwmp
             puts "ACS #{Cwmp::VERSION} by Luca Cervasio <luca.cervasio@gmail.com>"
             puts "Daemon running on http://localhost:#{@port}/acs"
             @web = Thread.new do
-                Thin::Logging.silent = true
+                # Thin::Logging.silent = true
                 Rack::Handler::Thin.run @app, :Port => @port
             end
 
