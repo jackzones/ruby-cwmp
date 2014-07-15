@@ -1,8 +1,8 @@
 # Ruby CWMP
 
-A ruby library to parse and generate CWMP messages. Includes an ACS server and a CPE simulator.
+A ruby library for parsing and crafting CWMP messages. Includes an ACS server and a CPE simulator.
 
-## Using the library to build CWMP messages
+## Crafting CWMP messages
 
 ```ruby
 require 'cwmp'
