@@ -5,10 +5,15 @@ require 'http_router'
 require 'nokogiri'
 require 'readline'
 
+Thread::abort_on_exception = true
 
 module Cwmp
 
     class Handler
+
+        def initialize obj
+            @acs = obj
+        end
 
         def call(env)
             req = Rack::Request.new(env)
@@ -29,6 +34,9 @@ module Cwmp
                 parameters = {}
                 doc.css("ParameterValueStruct").map { |it| parameters[it.children[1].text] = it.children[3].text }
 
+                if !@acs.cpes.has_key? serial_number
+                    @acs.cpes[serial_number] = {:conn_req => parameters['InternetGatewayDevice.ManagementServer.ConnectionRequestURL'], :queue => Queue.new}
+                end
                 puts "got Inform from #{req.ip}:#{req.port} [sn #{serial_number}] with eventcodes #{event_codes.join(", ")}"
 
                 inform_response = Cwmp::Message::inform_response
@@ -45,7 +53,14 @@ module Cwmp
                 end
 
                 # Got Empty Post or a Response. Now check for any event to send, otherwise 204
-                [204, {"Connection" => "Close", 'Server' => 'ruby-cwmp'}, ""]
+                if @acs.cpes['A54FD'][:queue].size > 0
+                    m = @acs.cpes['A54FD'][:queue].pop
+                    response = Rack::Response.new m, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
+                    response.finish
+                else
+                    [204, {"Connection" => "Close", 'Server' => 'ruby-cwmp'}, ""]
+                end
+
             end
         end
 
@@ -53,16 +68,20 @@ module Cwmp
 
 
     class Acs
+        attr_accessor :cpes
+
         def initialize (port)
+            ac = self
             @port = port
+            # @handler = Handler.new
             @app = HttpRouter.new do
                 # add('/api').to(SocketApp.new)
-                add('/acs').to(Handler.new)
+                add('/acs').to(Handler.new(ac))
             end
+            @cpes = {}
         end
 
         def start_cli
-
             list = [
                 'GetParameterValues', 'SetParameterValues', 'Reboot', 'FactoryReset', 'Download', 'AddObject', 'DeleteObject',
                 'help', 'quit', "waitMessage"
@@ -81,34 +100,25 @@ module Cwmp
                     when "help"
                         help
                     when "list"
-                        puts "list"
+                        p @cpes
+                    when "get"
+                        @cpes['A54FD'][:queue] << Cwmp::Message::get_parameter_values('InternetGatewayDevice.Time.')
+                        c = HTTPClient.new
+                        c.get @cpes['A54FD'][:conn_req]
                 end
             end
         end
 
         def start
+            puts "This is ACS #{Cwmp::VERSION} by Luca Cervasio <luca.cervasio@gmail.com>"
+            puts "Starting ACS Daemon on http://localhost:#{@port}"
             @web = Thread.new do
                 Thin::Logging.silent = true
                 Rack::Handler::Thin.run @app, :Port => @port
             end
 
-            Thread.new do
-                while true do
-                    sleep 1
-                    Readline.clear_rl
-                    puts "i"
-                    Readline.restore
-                end
-            end
             start_cli
         end
     end
 
-
-
-
 end
-
-
-
-

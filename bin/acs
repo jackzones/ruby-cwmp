@@ -11,7 +11,5 @@ o.on('-v', '--version', 'Version') { puts "acs v#{Cwmp::VERSION}"; exit }
 o.parse!
 
 port = options['port'] || 9321
-
-puts "Starting ACS Daemon on http://localhost:#{port}"
 Cwmp::Acs.new(port).start
 
