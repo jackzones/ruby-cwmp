@@ -4,6 +4,7 @@ require 'thin'
 require 'http_router'
 require 'nokogiri'
 require 'readline'
+require 'digest'
 
 Thread::abort_on_exception = true
 
@@ -51,7 +52,7 @@ module Cwmp
                 parameters = {}
                 doc.css("ParameterValueStruct").map { |it| parameters[it.element_children[0].text] = it.element_children[1].text }
 
-                ck = "sdfd"
+                ck = Digest::MD5.hexdigest("#{serial_number}#{Time.new.to_i}")
 
                 if !@acs.cpes.has_key? serial_number
                     cpe = AcsCpe.new serial_number
