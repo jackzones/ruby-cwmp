@@ -32,13 +32,15 @@ module Cwmp
         def call(env)
             req = Rack::Request.new(env)
             len = req.content_length.to_i
-            cookie = req.cookies['sessiontrack']
 
             if len == 0
                 message_type = ''
             else
-                doc = Nokogiri::XML(req.body.read)
-                message_type = doc.css("soap|Body")[0].element_children[0].name
+                body = req.body.read
+                doc = Nokogiri::XML(body)
+                body =~ /(\w+):Envelope/
+                soap_ns = $1
+                message_type = doc.css("#{soap_ns}|Body")[0].element_children[0].name
             end
 
             if message_type == "Inform"
@@ -47,7 +49,7 @@ module Cwmp
                 serial_number = doc.css("SerialNumber").text
                 event_codes = doc.css("EventCode").map { |n| n.text }
                 parameters = {}
-                doc.css("ParameterValueStruct").map { |it| parameters[it.children[1].text] = it.children[3].text }
+                doc.css("ParameterValueStruct").map { |it| parameters[it.element_children[0].text] = it.element_children[1].text }
 
                 ck = "sdfd"
 
@@ -61,25 +63,39 @@ module Cwmp
 
                 inform_response = Cwmp::Message::inform_response
                 response = Rack::Response.new inform_response, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
-                response.set_cookie("sessiontrack", {:value => "294823094lskdfsfsdf", :path => "/", :expires => Time.now+24*60*60})
+                response.set_cookie("sessiontrack", {:value => ck, :path => "/", :expires => Time.now+24*60*60})
                 response.finish
             elsif message_type == "TransferComplete"
                 puts "got TransferComplete"
             else
-                if message_type.include? "Response"
-                    puts "got #{message_type}"
-                elsif len == 0
+                if len == 0
                     puts "got Empty Post"
+                else
+                    puts "got #{message_type}"
+                    case message_type
+                        when "GetParameterValuesResponse"
+                            doc.css("ParameterValueStruct").each do |node|
+                                puts "#{node.element_children[0].text}: #{node.element_children[1].text}"
+                            end
+                        when "Fault"
+                            puts "#{doc.css("faultstring").text}: #{doc.css("FaultString").text}"
+                    end
+                end
+
+                cookie = req.cookies['sessiontrack']
+                @acs.cpes.each do |k,c|
+                    cpe = c if c.session_cookie = cookie
                 end
 
                 # Got Empty Post or a Response. Now check for any event to send, otherwise 204
-                # if @acs.cpes['A54FD'].queue.size > 0
-                #     m = @acs.cpes['A54FD'].queue.pop
-                #     response = Rack::Response.new m, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
-                #     response.finish
-                # else
+                if cpe.queue.size > 0
+                    m = cpe.queue.pop
+                    response = Rack::Response.new m, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
+                    response.finish
+                else
+                    puts "sending 204"
                     [204, {"Connection" => "Close", 'Server' => 'ruby-cwmp'}, ""]
-                # end
+                end
 
             end
         end
