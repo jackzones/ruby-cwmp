@@ -10,8 +10,8 @@ module Cwmp
             @acs_url = acs_url
             @serial = h[:serial] || "23434ds"
             @oui = h[:oui] || "006754"
-            @software_version = h[:software_version] || "0.1.1"
-            @manufacturer = h[:manufacturer] || "Moonar"
+            @software_version = h[:software_version] || Cwmp::VERSION
+            @manufacturer = h[:manufacturer] || "ruby-cwmp"
             @state = 'off'
             @periodic = Thread.new { periodic periodic } if periodic > 0
             @conn_req = Thread.new { connection_request }
