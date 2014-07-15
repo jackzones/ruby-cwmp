@@ -76,6 +76,19 @@ module Cwmp
             return b.to_xml
         end
 
+        def self.reboot
+            b = Nokogiri::XML::Builder.new
+
+            b[:soap].Envelope(NAMESPACES) {
+                b[:soap].Header {}
+                b[:soap].Body {
+                    b[:cwmp].Reboot() {}
+                }
+            }
+
+            return b.to_xml
+        end
+
         def self.get_parameter_values (leaves)
             b = Nokogiri::XML::Builder.new
 

@@ -138,9 +138,12 @@ module Cwmp
                     when "list"
                         p @cpes
                     when /^get (\w+) (.+)/
-                        puts "getting #{$1} #{$2}"
                         cpe = @cpes[$1]
                         cpe.queue << Cwmp::Message::get_parameter_values($2)
+                        cpe.do_connection_request
+                    when /reboot (\w+)/
+                        cpe = @cpes[$1]
+                        cpe.queue << Cwmp::Message::reboot
                         cpe.do_connection_request
                 end
             end
@@ -150,7 +153,7 @@ module Cwmp
             puts "ACS #{Cwmp::VERSION} by Luca Cervasio <luca.cervasio@gmail.com>"
             puts "Daemon running on http://localhost:#{@port}/acs"
             @web = Thread.new do
-                # Thin::Logging.silent = true
+                Thin::Logging.silent = true
                 Rack::Handler::Thin.run @app, :Port => @port
             end
 
