@@ -9,8 +9,22 @@ Thread::abort_on_exception = true
 
 module Cwmp
 
-    class Handler
+    class AcsCpe
+        attr_accessor :serial, :conn_req, :queue
 
+        def initialize serial
+            @serial = serial
+            @queue = Queue.new
+        end
+
+        def do_connection_request
+            c = HTTPClient.new
+            c.get @conn_req
+        end
+
+    end
+
+    class Handler
         def initialize obj
             @acs = obj
         end
@@ -35,7 +49,9 @@ module Cwmp
                 doc.css("ParameterValueStruct").map { |it| parameters[it.children[1].text] = it.children[3].text }
 
                 if !@acs.cpes.has_key? serial_number
-                    @acs.cpes[serial_number] = {:conn_req => parameters['InternetGatewayDevice.ManagementServer.ConnectionRequestURL'], :queue => Queue.new}
+                    cpe = AcsCpe.new serial_number
+                    cpe.conn_req = parameters['InternetGatewayDevice.ManagementServer.ConnectionRequestURL']
+                    @acs.cpes[serial_number] = cpe
                 end
                 puts "got Inform from #{req.ip}:#{req.port} [sn #{serial_number}] with eventcodes #{event_codes.join(", ")}"
 
@@ -53,8 +69,8 @@ module Cwmp
                 end
 
                 # Got Empty Post or a Response. Now check for any event to send, otherwise 204
-                if @acs.cpes['A54FD'][:queue].size > 0
-                    m = @acs.cpes['A54FD'][:queue].pop
+                if @acs.cpes['A54FD'].queue.size > 0
+                    m = @acs.cpes['A54FD'].queue.pop
                     response = Rack::Response.new m, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
                     response.finish
                 else
@@ -101,17 +117,18 @@ module Cwmp
                         help
                     when "list"
                         p @cpes
-                    when "get"
-                        @cpes['A54FD'][:queue] << Cwmp::Message::get_parameter_values('InternetGatewayDevice.Time.')
-                        c = HTTPClient.new
-                        c.get @cpes['A54FD'][:conn_req]
+                    when /^get (\w+) (.+)/
+                        puts "getting #{$1} #{$2}"
+                        cpe = @cpes[$1]
+                        cpe.queue << Cwmp::Message::get_parameter_values($2)
+                        cpe.do_connection_request
                 end
             end
         end
 
         def start
-            puts "This is ACS #{Cwmp::VERSION} by Luca Cervasio <luca.cervasio@gmail.com>"
-            puts "Starting ACS Daemon on http://localhost:#{@port}"
+            puts "ACS #{Cwmp::VERSION} by Luca Cervasio <luca.cervasio@gmail.com>"
+            puts "Daemon running on http://localhost:#{@port}/acs"
             @web = Thread.new do
                 Thin::Logging.silent = true
                 Rack::Handler::Thin.run @app, :Port => @port
