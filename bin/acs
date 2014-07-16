@@ -11,5 +11,5 @@ o.on('-v', '--version', 'Version') { puts "acs v#{Cwmp::VERSION}"; exit }
 o.parse!
 
 port = options['port'] || 9321
-Cwmp::Acs.new(port).start
+Cwmp::Acs.instance.start(port)
 

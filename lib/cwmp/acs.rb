@@ -5,6 +5,7 @@ require 'http_router'
 require 'nokogiri'
 require 'readline'
 require 'digest'
+require 'singleton'
 
 Thread::abort_on_exception = true
 
@@ -105,17 +106,25 @@ module Cwmp
 
 
     class Acs
+        include Singleton
+
         attr_accessor :cpes
 
-        def initialize (port)
+        def initialize
             ac = self
-            @port = port
+
             # @handler = Handler.new
             @app = HttpRouter.new do
                 # add('/api').to(SocketApp.new)
                 add('/acs').to(Handler.new(ac))
             end
             @cpes = {}
+        end
+
+        def GetParameterValues serial, leaf
+            cpe = @cpes[serial]
+            cpe.queue << Cwmp::Message::get_parameter_values(leaf)
+            cpe.do_connection_request
         end
 
         def start_cli
@@ -139,26 +148,38 @@ module Cwmp
                     when "list"
                         p @cpes
                     when /^get (\w+) (.+)/
-                        cpe = @cpes[$1]
-                        cpe.queue << Cwmp::Message::get_parameter_values($2)
-                        cpe.do_connection_request
+                        GetParameterValues $1, $2
                     when /reboot (\w+)/
                         cpe = @cpes[$1]
                         cpe.queue << Cwmp::Message::reboot
                         cpe.do_connection_request
+                    when "run"
+                        begin
+                            require './examples/api_usage'
+                        rescue LoadError
+                            puts "file not found"
+                        rescue SyntaxError => e
+                            puts "file contains syntax errors: #{e.message}"
+                        rescue Exception => e
+                            puts "runtime error: #{e.message}"
+                        end
                 end
             end
         end
 
-        def start
+        def start port
+            trap("SIGINT") { puts "Bye"; exit! }
+            @port = port
             puts "ACS #{Cwmp::VERSION} by Luca Cervasio <luca.cervasio@gmail.com>"
             puts "Daemon running on http://localhost:#{@port}/acs"
-            @web = Thread.new do
-                Thin::Logging.silent = true
-                Rack::Handler::Thin.run @app, :Port => @port
+
+            Thread.new do
+                start_cli
             end
 
-            start_cli
+            Thin::Logging.silent = true
+            Rack::Handler::Thin.run @app, :Port => @port
+
         end
     end
 
