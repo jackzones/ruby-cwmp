@@ -11,12 +11,28 @@ Thread::abort_on_exception = true
 
 module Cwmp
 
+    class CpeSession
+        def initialize
+
+        end
+    end
+
+    class Request
+        attr_accessor :message, :cb
+        def initialize message, &block
+            @message = message
+            @cb = block
+        end
+    end
+
     class AcsCpe
-        attr_accessor :serial, :conn_req, :queue, :session_cookie
+        attr_accessor :serial, :conn_req, :queue, :session_cookie, :req_currently_in_service, :session
 
         def initialize serial
             @serial = serial
             @queue = Queue.new
+            @req_currently_in_service = nil
+            @session = nil
         end
 
         def do_connection_request
@@ -70,6 +86,11 @@ module Cwmp
             elsif message_type == "TransferComplete"
                 puts "got TransferComplete"
             else
+                cookie = req.cookies['sessiontrack']
+                @acs.cpes.each do |k,c|
+                    cpe = c if c.session_cookie = cookie
+                end
+
                 if len == 0
                     puts "got Empty Post"
                 else
@@ -82,17 +103,18 @@ module Cwmp
                         when "Fault"
                             puts "#{doc.css("faultstring").text}: #{doc.css("FaultString").text}"
                     end
+
+                    if cpe.req_currently_in_service != nil
+                        cpe.req_currently_in_service.cb.call body
+                    end
                 end
 
-                cookie = req.cookies['sessiontrack']
-                @acs.cpes.each do |k,c|
-                    cpe = c if c.session_cookie = cookie
-                end
 
                 # Got Empty Post or a Response. Now check for any event to send, otherwise 204
                 if cpe.queue.size > 0
                     m = cpe.queue.pop
-                    response = Rack::Response.new m, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
+                    cpe.req_currently_in_service = m
+                    response = Rack::Response.new m.message, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
                     response.finish
                 else
                     puts "sending 204"
@@ -123,7 +145,9 @@ module Cwmp
 
         def GetParameterValues serial, leaf
             cpe = @cpes[serial]
-            cpe.queue << Cwmp::Message::get_parameter_values(leaf)
+            cpe.queue << Cwmp::Request.new(Cwmp::Message::get_parameter_values(leaf)) do |resp|
+                puts "arrived #{resp}"
+            end
             cpe.do_connection_request
         end
 
@@ -181,6 +205,11 @@ module Cwmp
             Rack::Handler::Thin.run @app, :Port => @port
 
         end
+
+        def start_session(serial, &block)
+
+        end
+
     end
 
 end
