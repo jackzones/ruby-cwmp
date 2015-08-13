@@ -18,4 +18,5 @@ Gem::Specification.new do |spec|
     spec.add_dependency('thin', '~> 1.6', '>= 1.6.2')
     spec.add_dependency('http_router', '~> 0.11', '>= 0.11.1')
     spec.add_dependency('httpclient', '~> 2.4', '>= 2.4.0')
+    spec.add_dependency('rake', '~> 0.9', '>= 0.9.2')
 end
