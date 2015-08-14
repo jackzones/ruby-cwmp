@@ -55,10 +55,11 @@ module Cwmp
                 message_type = ''
             else
                 body = req.body.read
-                doc = Nokogiri::XML(body)
-                body =~ /(\w+):Envelope/
-                soap_ns = $1
-                message_type = doc.css("#{soap_ns}|Body")[0].element_children[0].name
+                mess = Cwmp::Message::BaseMessage::parse_from_text body
+                # doc = Nokogiri::XML(body)
+                # body =~ /(\w+):Envelope/
+                # soap_ns = $1
+                message_type = mess.message_type
             end
 
             if message_type == "Inform"
@@ -154,7 +155,7 @@ module Cwmp
         def start_cli
             list = [
                 'GetParameterValues', 'SetParameterValues', 'Reboot', 'FactoryReset', 'Download', 'AddObject', 'DeleteObject',
-                'help', 'quit', "waitMessage"
+                'help', 'list', 'quit', "waitMessage"
             ].sort
 
             comp = proc { |s| list.grep(/^#{Regexp.escape(s)}/) }
@@ -164,11 +165,16 @@ module Cwmp
 
             while line = ::Readline.readline('> ', true)
                 case line
-                    when "quit"
+                    when "quit", "exit"
                         puts "Bye"
                         exit(0)
                     when "help"
-                        help
+                        puts "help not available"
+                    when "list games"
+                        games = ["FALKEN'S MAZE", "BLACK JACK", "GIN RUMMY", "HEARTS", "BRIDGE", "CHECKERS", "CHESS", "POKER", "FIGHTER COMBAT", "GUERRILLA ENGAGEMENT", "DESERT WARFARE" "AIR-TO-GROUND ACTIONS", "THEATERWIDE TACTICAL WARFARE", "THEATERWIDE BIOTOXIC AND CHEMICAL WARFARE", "GLOBAL THERMONUCLEAR WAR"]
+                        puts games.join "\n"
+                    when "help games"
+                        puts "Games refers to models, simulations and games which have strategic applications."
                     when "list"
                         p @cpes
                     when /^get (\w+) (.+)/
@@ -187,6 +193,8 @@ module Cwmp
                         rescue Exception => e
                             puts "runtime error: #{e.message}"
                         end
+                    else
+                        puts "unknown command"
                 end
             end
         end

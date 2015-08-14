@@ -15,6 +15,8 @@ module Cwmp
 
             m = Object.const_get("Cwmp").const_get("Message").const_get(message_type).new # creating class from classname variable
             m.message_type = message_type
+            m.parsed_xml_doc = doc
+            m.raw_xml_message = @msg
             return m
 
             # case message_type
