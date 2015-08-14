@@ -1,11 +1,15 @@
 require 'nokogiri'
 
 module Cwmp
-    class Message
-        NAMESPACES = {"xmlns:soap" => "http://schemas.xmlsoap.org/soap/envelope/", "xmlns:soap-enc" => "http://schemas.xmlsoap.org/soap/encoding/", "xmlns:cwmp" => "urn:dslforum-org:cwmp-1-0", "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance", "xml:xsd" => "http://www.w3.org/2001/XMLSchema", "xmlns" => "urn:dslforum-org:cwmp-1-0"}
+    module Message
+        class BaseMessage
 
-        def self.inform(manufacturer, oui, serial, eventcodes, software_version)
-            return '<?xml version="1.0" encoding="UTF-8"?>
+
+            attr_accessor :message_type
+            NAMESPACES = {"xmlns:soap" => "http://schemas.xmlsoap.org/soap/envelope/", "xmlns:soap-enc" => "http://schemas.xmlsoap.org/soap/encoding/", "xmlns:cwmp" => "urn:dslforum-org:cwmp-1-0", "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance", "xml:xsd" => "http://www.w3.org/2001/XMLSchema", "xmlns" => "urn:dslforum-org:cwmp-1-0"}
+
+            def self.inform(manufacturer, oui, serial, eventcodes, software_version)
+                return '<?xml version="1.0" encoding="UTF-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
                xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -61,60 +65,60 @@ module Cwmp
         </cwmp:Inform>
     </soap:Body>
 </soap:Envelope>'
-        end
+            end
 
-        def self.inform_response
-            b = Nokogiri::XML::Builder.new
+            def self.inform_response
+                b = Nokogiri::XML::Builder.new
 
-            b[:soap].Envelope(NAMESPACES) {
-                b[:soap].Header {}
-                b[:soap].Body {
-                    b[:cwmp].InformResponse() {}
+                b[:soap].Envelope(NAMESPACES) {
+                    b[:soap].Header {}
+                    b[:soap].Body {
+                        b[:cwmp].InformResponse() {}
+                    }
                 }
-            }
 
-            return b.to_xml
-        end
+                return b.to_xml
+            end
 
-        def self.reboot
-            b = Nokogiri::XML::Builder.new
+            def self.reboot
+                b = Nokogiri::XML::Builder.new
 
-            b[:soap].Envelope(NAMESPACES) {
-                b[:soap].Header {}
-                b[:soap].Body {
-                    b[:cwmp].Reboot() {}
+                b[:soap].Envelope(NAMESPACES) {
+                    b[:soap].Header {}
+                    b[:soap].Body {
+                        b[:cwmp].Reboot() {}
+                    }
                 }
-            }
 
-            return b.to_xml
-        end
+                return b.to_xml
+            end
 
-        def self.get_parameter_values (leaves)
-            b = Nokogiri::XML::Builder.new
+            def self.get_parameter_values (leaves)
+                b = Nokogiri::XML::Builder.new
 
-            b[:soap].Envelope(NAMESPACES) {
-                b[:soap].Header {}
-                b[:soap].Body {
+                b[:soap].Envelope(NAMESPACES) {
+                    b[:soap].Header {}
+                    b[:soap].Body {
 
-                    b[:cwmp].GetParameterValues() {
-                        b.ParameterNames({"soap-enc:arrayType" => "cwmp:string[#{leaves.kind_of?(Array) ? leaves.size : '1'}]"}) {
-                            if leaves.kind_of?(Array)
-                                leaves.each do |leaf|
-                                    b.string leaf
+                        b[:cwmp].GetParameterValues() {
+                            b.ParameterNames({"soap-enc:arrayType" => "cwmp:string[#{leaves.kind_of?(Array) ? leaves.size : '1'}]"}) {
+                                if leaves.kind_of?(Array)
+                                    leaves.each do |leaf|
+                                        b.string leaf
+                                    end
+                                else
+                                    b.string leaves
                                 end
-                            else
-                                b.string leaves
-                            end
+                            }
                         }
                     }
                 }
-            }
 
-            return b.to_xml
-        end
+                return b.to_xml
+            end
 
-        def self.get_parameter_values_response
-            return '<soap:Envelope
+            def self.get_parameter_values_response
+                return '<soap:Envelope
 	xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
 	xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
 	xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
@@ -150,46 +154,46 @@ module Cwmp
 </cwmp:GetParameterValuesResponse>
 </soap:Body>
 </soap:Envelope>'
-        end
+            end
 
-        def self.set_parameter_values (leaves)
-            b = Nokogiri::XML::Builder.new
+            def self.set_parameter_values (leaves)
+                b = Nokogiri::XML::Builder.new
 
-            b[:soap].Envelope(NAMESPACES) {
-                b[:soap].Header {}
-                b[:soap].Body {
+                b[:soap].Envelope(NAMESPACES) {
+                    b[:soap].Header {}
+                    b[:soap].Body {
 
-                    b[:cwmp].SetParameterValues() {
-                        b.ParameterList({"soap-enc:arrayType" => "cwmp:ParameterValueStruct[#{leaves[0].kind_of?(Array) ? leaves.size : '1'}]"}) {
-                            if leaves[0].kind_of?(Array)
-                                leaves.each do |leaf|
+                        b[:cwmp].SetParameterValues() {
+                            b.ParameterList({"soap-enc:arrayType" => "cwmp:ParameterValueStruct[#{leaves[0].kind_of?(Array) ? leaves.size : '1'}]"}) {
+                                if leaves[0].kind_of?(Array)
+                                    leaves.each do |leaf|
+                                        b.ParameterValueStruct {
+                                            b.Name leaf[0]
+                                            b.Value leaf[1]
+                                        }
+                                    end
+                                else
                                     b.ParameterValueStruct {
-                                        b.Name leaf[0]
-                                        b.Value leaf[1]
+                                        b.Name leaves[0]
+                                        b.Value leaves[1]
                                     }
                                 end
-                            else
-                                b.ParameterValueStruct {
-                                    b.Name leaves[0]
-                                    b.Value leaves[1]
-                                }
-                            end
-                            b.ParameterKey "asdads"
+                                b.ParameterKey "asdads"
+                            }
                         }
                     }
                 }
-            }
 
-            return b.to_xml
-        end
+                return b.to_xml
+            end
 
 
-        def self.set_parameter_values_response
-            return ''
-        end
+            def self.set_parameter_values_response
+                return ''
+            end
 
-        def self.get_parameter_names_response
-            return '<soap:Envelope
+            def self.get_parameter_names_response
+                return '<soap:Envelope
 	xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
 	xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
 	xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
@@ -273,6 +277,25 @@ module Cwmp
 </cwmp:GetParameterNamesResponse>
 </soap:Body>
 </soap:Envelope>'
+            end
+
+            def self.parse_from_text txtmsg
+                parser = Cwmp::MessageParser.new txtmsg
+                return parser.parse
+            end
         end
+
+        class Inform < Cwmp::Message::BaseMessage
+            def initialize
+
+            end
+        end
+
+        class GetParameterValuesResponse < Cwmp::Message::BaseMessage
+            def initialize
+
+            end
+        end
+
     end
 end
