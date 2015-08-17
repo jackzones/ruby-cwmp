@@ -106,7 +106,7 @@ module Cwmp
                     end
 
                     if cpe.req_currently_in_service != nil
-                        cpe.req_currently_in_service.cb.call body
+                        cpe.req_currently_in_service.cb.call(Cwmp::Message::BaseMessage.parse_from_text(body))
                     end
                 end
 
@@ -144,13 +144,13 @@ module Cwmp
             @cpes = {}
         end
 
-        def GetParameterValues serial, leaf
-            cpe = @cpes[serial]
-            cpe.queue << Cwmp::Request.new(Cwmp::Message::get_parameter_values(leaf)) do |resp|
-                puts "arrived #{resp}"
-            end
-            cpe.do_connection_request
-        end
+        # def GetParameterValues serial, leaf
+        #     cpe = @cpes[serial]
+        #     cpe.queue << Cwmp::Request.new(Cwmp::Message::GetParameterValues.build(leaf)) do |resp|
+        #         puts "arrived #{resp}"
+        #     end
+        #     cpe.do_connection_request
+        # end
 
         def start_cli
             list = [
@@ -171,17 +171,33 @@ module Cwmp
                     when "help"
                         puts "help not available"
                     when "list games"
-                        games = ["FALKEN'S MAZE", "BLACK JACK", "GIN RUMMY", "HEARTS", "BRIDGE", "CHECKERS", "CHESS", "POKER", "FIGHTER COMBAT", "GUERRILLA ENGAGEMENT", "DESERT WARFARE" "AIR-TO-GROUND ACTIONS", "THEATERWIDE TACTICAL WARFARE", "THEATERWIDE BIOTOXIC AND CHEMICAL WARFARE", "GLOBAL THERMONUCLEAR WAR"]
-                        puts games.join "\n"
+                        puts ["FALKEN'S MAZE", "BLACK JACK", "GIN RUMMY", "HEARTS", "BRIDGE", "CHECKERS", "CHESS", "POKER", "FIGHTER COMBAT", "GUERRILLA ENGAGEMENT", "DESERT WARFARE" "AIR-TO-GROUND ACTIONS", "THEATERWIDE TACTICAL WARFARE", "THEATERWIDE BIOTOXIC AND CHEMICAL WARFARE", "GLOBAL THERMONUCLEAR WAR"].join "\n"
                     when "help games"
-                        puts "Games refers to models, simulations and games which have strategic applications."
+                        puts "Games refers to models, simulations and games which have strategic applications"
                     when "list"
                         p @cpes
-                    when /^get (\w+) (.+)/
-                        GetParameterValues $1, $2
-                    when /reboot (\w+)/
-                        cpe = @cpes[$1]
-                        cpe.queue << Cwmp::Message::reboot
+                    when /send (\w+) (\w+) (.+)/
+                        message_type = $1
+                        serial = $2
+                        args = $3.split(" ")
+
+                        allowed_messages = ["GetParameterValues", "GetParameterNames", "SetParameterValues", "AddObject", "DeleteObject", "Reboot", "FactoryReset"]
+                        if !allowed_messages.include? message_type
+                            puts "cmd #{message_type} unknown"
+                            next
+                        end
+
+                        cpe = @cpes[serial]
+                        if !cpe
+                            puts "cpe #{serial} unknown"
+                            next
+                        end
+
+                        mess = Object.const_get("Cwmp").const_get("Message").const_get(message_type).build args
+                        puts mess
+                        cpe.queue << Cwmp::Request.new(mess) do |resp|
+                            puts "arrived #{resp}"
+                        end
                         cpe.do_connection_request
                     when "run"
                         begin
@@ -194,7 +210,7 @@ module Cwmp
                             puts "runtime error: #{e.message}"
                         end
                     else
-                        puts "unknown command"
+                        puts "unknown command <#{line}>" if line != ""
                 end
             end
         end
