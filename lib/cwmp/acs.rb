@@ -79,7 +79,7 @@ module Cwmp
                     end
                     puts "got Inform from #{req.ip}:#{req.port} [sn #{serial_number}] with eventcodes #{event_codes.join(", ")}"
 
-                    inform_response = Cwmp::Message::InformResponse.build
+                    inform_response = Cwmp::Message::inform_response
                     response = Rack::Response.new inform_response.xml, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
                     response.set_cookie("sessiontrack", {:value => ck, :path => "/", :expires => Time.now+24*60*60})
                     response.finish
@@ -177,11 +177,11 @@ module Cwmp
                         serial = $2
                         args = $3.split(" ")
 
-                        allowed_messages = ["GetParameterValues", "GetParameterNames", "SetParameterValues", "AddObject", "DeleteObject", "Reboot", "FactoryReset"]
-                        if !allowed_messages.include? message_type
-                            puts "cmd #{message_type} unknown"
-                            next
-                        end
+                        # allowed_messages = ["GetParameterValues", "GetParameterNames", "SetParameterValues", "AddObject", "DeleteObject", "Reboot", "FactoryReset"]
+                        # if !allowed_messages.include? message_type
+                        #     puts "cmd #{message_type} unknown"
+                        #     next
+                        # end
 
                         cpe = @cpes[serial]
                         if !cpe
@@ -189,7 +189,8 @@ module Cwmp
                             next
                         end
 
-                        mess = Object.const_get("Cwmp").const_get("Message").const_get(message_type).build args
+                        mess = Object.const_get("Cwmp").const_get("Message").send(message_type, args)
+                        # mess = Object.const_get("Cwmp").const_get("Message").const_get(message_type).build args
                         puts mess
                         cpe.queue << Cwmp::Request.new(mess) do |resp|
                             puts "arrived #{resp}"

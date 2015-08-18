@@ -43,7 +43,7 @@ class TestParser < Test::Unit::TestCase
 </soap:Envelope>'
 
         msg = Cwmp::Message::parse_from_text(txtmsg)
-        assert_equal(msg.class.to_s, "Cwmp::Message::GetParameterValuesResponse")
+        assert_equal(msg.class.to_s, "Cwmp::Message")
 		assert_equal(msg.message_type, "GetParameterValuesResponse")
     end
 
@@ -106,7 +106,7 @@ class TestParser < Test::Unit::TestCase
 </soap:Envelope>'
 
 		msg = Cwmp::Message::parse_from_text(txtmsg)
-		assert_equal(msg.class.to_s, "Cwmp::Message::Inform")
+		assert_equal(msg.class.to_s, "Cwmp::Message")
 		assert_equal(msg.message_type, "Inform")
 		assert_equal(msg.supported_model, "TR-098")
 	end
