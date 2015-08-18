@@ -50,9 +50,8 @@ module Cwmp
         def call(env)
             req = Rack::Request.new(env)
             len = req.content_length.to_i
+
             begin
-
-
                 if len == 0
                     message_type = ''
                 else
@@ -61,7 +60,6 @@ module Cwmp
                     message_type = mess.message_type
                 end
 
-                puts message_type
                 if message_type == "Inform"
                     doc = mess.parsed_xml_doc
                     manufacturer = doc.css("Manufacturer").text
@@ -82,7 +80,7 @@ module Cwmp
                     puts "got Inform from #{req.ip}:#{req.port} [sn #{serial_number}] with eventcodes #{event_codes.join(", ")}"
 
                     inform_response = Cwmp::Message::InformResponse.build
-                    response = Rack::Response.new inform_response.to_s, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
+                    response = Rack::Response.new inform_response.xml, 200, {'Connection' => 'Keep-Alive', 'Server' => 'ruby-cwmp'}
                     response.set_cookie("sessiontrack", {:value => ck, :path => "/", :expires => Time.now+24*60*60})
                     response.finish
                 elsif message_type == "TransferComplete"
@@ -97,6 +95,7 @@ module Cwmp
                         puts "got Empty Post"
                     else
                         puts "got #{message_type}"
+                        doc = mess.parsed_xml_doc
                         case message_type
                             when "GetParameterValuesResponse"
                                 doc.css("ParameterValueStruct").each do |node|
@@ -107,7 +106,7 @@ module Cwmp
                         end
 
                         if cpe.req_currently_in_service != nil
-                            cpe.req_currently_in_service.cb.call(Cwmp::Message::BaseMessage.parse_from_text(body))
+                            cpe.req_currently_in_service.cb.call(mess)
                         end
                     end
 

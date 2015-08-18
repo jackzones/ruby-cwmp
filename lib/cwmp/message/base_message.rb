@@ -19,13 +19,15 @@ module Cwmp
         end
 
         class BaseMessage
-
             attr_accessor :message_type, :raw_xml_message, :parsed_xml_doc
 
             def to_s
-                @raw_xml_message
+                return "CWMP Mess #{@message_type}"
             end
 
+            def xml
+                return @raw_xml_message
+            end
         end
 
     end
