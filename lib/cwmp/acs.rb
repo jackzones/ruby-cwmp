@@ -190,8 +190,6 @@ module Cwmp
                         end
 
                         mess = Object.const_get("Cwmp").const_get("Message").send(message_type, args)
-                        # mess = Object.const_get("Cwmp").const_get("Message").const_get(message_type).build args
-                        puts mess
                         cpe.queue << Cwmp::Request.new(mess) do |resp|
                             puts "arrived #{resp}"
                         end
