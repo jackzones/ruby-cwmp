@@ -84,7 +84,7 @@ module Cwmp
                 c = HTTPClient.new
 
                 puts "sending Inform with event #{event}"
-                resp = c.post @acs_url, Cwmp::Message::inform(@manufacturer, @oui, @serial, event, @software_version), {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
+                resp = c.post @acs_url, Cwmp::Message::inform(@manufacturer, @oui, @serial, event, @software_version).xml, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                 doc = Nokogiri::XML(resp.body)
                 resp.body =~ /(\w+):Envelope/
                 soap_ns = $1
@@ -97,11 +97,11 @@ module Cwmp
                     puts "got #{message_type}"
                     case message_type
                         when "GetParameterValues"
-                            resp = c.post @acs_url, Cwmp::Message::get_parameter_values_response, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
+                            resp = c.post @acs_url, (Cwmp::Message::get_parameter_values_response).xml, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                         when "GetParameterNames"
-                            resp = c.post @acs_url, Cwmp::Message::get_parameter_names_response, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
+                            resp = c.post @acs_url, (Cwmp::Message::get_parameter_names_response).xml, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                         when "SetParameterValues"
-                            resp = c.post @acs_url, Cwmp::Message::set_parameter_values_response, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
+                            resp = c.post @acs_url, (Cwmp::Message::set_parameter_values_response).xml, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                     end
                 end
                 puts "got #{resp.status}, closing"

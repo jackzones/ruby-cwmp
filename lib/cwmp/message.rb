@@ -207,7 +207,10 @@ module Cwmp
         end
 
         def self.get_parameter_names_response
-            return '<soap:Envelope
+            m = Cwmp::Message.new
+
+            m.message_type = "Inform"
+            m.raw_xml_message = '<soap:Envelope
 	xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
 	xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
 	xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
@@ -291,10 +294,15 @@ module Cwmp
 </cwmp:GetParameterNamesResponse>
 </soap:Body>
 </soap:Envelope>'
+
+            return m
         end
 
-        def self.get_parameter_value_response
-            return '<soap:Envelope
+        def self.get_parameter_values_response
+            m = Cwmp::Message.new
+
+            m.message_type = "Inform"
+            m.raw_xml_message = '<soap:Envelope
 	xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
 	xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
 	xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
@@ -330,6 +338,8 @@ module Cwmp
 </cwmp:GetParameterValuesResponse>
 </soap:Body>
 </soap:Envelope>'
+
+            return m
         end
 
     end
