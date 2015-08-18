@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-require_relative '../lib/cwmp/parser.rb'
 require "test/unit"
 
 class TestParser < Test::Unit::TestCase
