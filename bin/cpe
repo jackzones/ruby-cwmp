@@ -11,7 +11,7 @@ o.on('-h', '--help', 'Server port') { puts o; exit }
 o.on('-v', '--version', 'Version') { puts "cpe v#{Cwmp::VERSION}"; exit }
 o.parse!
 
-url = options['url'] || 'http://localhost:9292/acs'
+url = options['url'] || 'http://localhost:9321/acs'
 periodic_interval = options['periodic'] || 0
 
 cpe = Cwmp::Cpe.new url, periodic_interval, {:serial => "A54FD"}
