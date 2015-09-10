@@ -1,5 +1,8 @@
 require 'httpclient'
 require 'socket'
+require 'xmpp4r/client'
+require 'nokogiri'
+include Jabber
 
 module Cwmp
 
@@ -15,6 +18,7 @@ module Cwmp
             @state = 'off'
             @periodic = Thread.new { periodic periodic } if periodic > 0
             @conn_req = Thread.new { connection_request }
+            @xmpp_req = Thread.new { xmpp_connection_request }
             @factory = true
         end
 
@@ -46,6 +50,7 @@ module Cwmp
         end
 
         def loop
+            @xmpp_req.join
             @conn_req.join
         end
 
@@ -79,6 +84,59 @@ module Cwmp
             end
         end
 
+        def xmpp_connection_request
+            puts "start xmpp connection"
+            myJID = JID.new('cpe1@mosesacs.org/casatua')
+            myPassword = 'password1234'
+            cl = Client.new(myJID)
+            cl.connect
+            cl.auth(myPassword)
+            cl.send(Presence.new)
+            puts "Connected ! send messages to #{myJID.strip.to_s}."
+
+            mainthread = Thread.current
+            cl.add_iq_callback do |m|
+                if m.type == :error
+                    puts "error"
+                elsif m.type == :get
+                    puts "send xmpp connection request result"
+
+                    puts "#{xmpp_connection_request_response_iq(m.from)}"
+                    cl.send(xmpp_connection_request_response_iq(m.from))
+
+                    puts "send Inform with event CONNECTION REQUEST"
+                    do_connection '6 CONNECTION REQUEST'
+                end
+
+            end
+            Thread.stop
+            cl.close
+
+        end
+
+        def xmpp_connection_request_response_iq from
+            iq = Iq.new(:result)
+            iq.from = 'cpe1@mosesacs.org'
+            iq.to = from
+            iq.id = 'cr001'
+            iq.add_namespace('urn:broadband-forum-org:cwmp:xmppConnReq-1-0')
+            return iq
+        end
+
+        def xmpp_connection_request_iq
+            iq = Iq.new(:get)
+            iq.from = 'cpe1@mosesacs.org'
+            iq.to = 'acs@mosesacs.org'
+            iq.id = 'cr001'
+            iq.add_namespace('urn:broadband-forum-org:cwmp:xmppConnReq-1-0')
+            cr = iq.add REXML::Element.new('connectionRequest')
+            cr.add_namespace('urn:broadband-forum-org:cwmp:xmppConnReq-1-0')
+            cr.add(REXML::Element.new('username').add_text('username'))
+            cr.add(REXML::Element.new('password').add_text('password'))
+            iq.add(cr)
+            return iq
+        end
+
         def do_connection(event)
             begin
                 c = HTTPClient.new
@@ -104,7 +162,7 @@ module Cwmp
                             resp = c.post @acs_url, (Cwmp::Message::set_parameter_values_response).xml, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                     end
                 end
-                puts "got #{resp.status}, closing"
+                puts "gota #{resp.status}, closing"
                 c.reset @acs_url
             rescue Errno::ECONNREFUSED
                 puts "can't connect to #{@acs_url}"
