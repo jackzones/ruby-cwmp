@@ -86,8 +86,8 @@ module Cwmp
 
         def xmpp_connection_request
             puts "start xmpp connection"
-            myJID = JID.new('cpe1@mosesacs.org/casatua')
-            myPassword = 'password1234'
+            myJID = JID.new('cpe@mosesacs.org/casatua')
+            myPassword = 'pass'
             cl = Client.new(myJID)
             cl.connect
             cl.auth(myPassword)
@@ -154,15 +154,17 @@ module Cwmp
                     message_type = doc.css("#{soap_ns}|Body").children.map(&:name)[1]
                     puts "got #{message_type}"
                     case message_type
-                        when "GetParameterValues"
+                        when "cwmp:GetParameterValues"
                             resp = c.post @acs_url, (Cwmp::Message::get_parameter_values_response).xml, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
-                        when "GetParameterNames"
+                        when "cwmp:GetParameterNames"
                             resp = c.post @acs_url, (Cwmp::Message::get_parameter_names_response).xml, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
-                        when "SetParameterValues"
+                        when "cwmp:SetParameterValues"
                             resp = c.post @acs_url, (Cwmp::Message::set_parameter_values_response).xml, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
+                        when "cmwp:ChangeDUState"
+                            resp = c.post @acs_url, (Cwmp::Message::change_du_state_response).xml, {'User-Agent' => "ruby-cwmp #{Cwmp::VERSION}", "Content-Type" => 'text/xml; charset="utf-8"'}
                     end
                 end
-                puts "gota #{resp.status}, closing"
+                puts "got a #{resp.status}, closing"
                 c.reset @acs_url
             rescue Errno::ECONNREFUSED
                 puts "can't connect to #{@acs_url}"

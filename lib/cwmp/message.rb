@@ -70,13 +70,15 @@ module Cwmp
 
         def self.inform(manufacturer, oui, serial, eventcodes, software_version)
             m = Cwmp::Message.new
-
+puts "here we go"
             m.message_type = "Inform"
             m.raw_xml_message = '<?xml version="1.0" encoding="UTF-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
                xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    <soap:Header/>
+    <soap:Header>
+        <cwmp:ID soap:mustUnderstand="1">37</cwmp:ID>
+    </soap:Header>
     <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
         <cwmp:Inform>
             <DeviceId>
@@ -143,6 +145,25 @@ module Cwmp
                 b[:soap].Header {}
                 b[:soap].Body {
                     b[:cwmp].InformResponse() {}
+                }
+            }
+
+            m.raw_xml_message = b.to_xml
+
+            return m
+        end
+
+        def self.change_du_state_response
+            m = Cwmp::Message.new
+
+            m.message_type = "ChangeDUStateResponse"
+
+            b = Nokogiri::XML::Builder.new
+
+            b[:soap].Envelope(NAMESPACES) {
+                b[:soap].Header {}
+                b[:soap].Body {
+                    b[:cwmp].ChangeDUStateResponse() {}
                 }
             }
 
